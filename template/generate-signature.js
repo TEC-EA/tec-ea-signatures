@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 const [firstName, lastName, jobTitle] = process.argv.slice(2);
 const folderName = `${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
