@@ -19,9 +19,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout repository with proper token for push
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
 
       # 2️⃣ Set up Node.js
       - name: Set up Node.js
@@ -29,7 +31,7 @@ jobs:
         with:
           node-version: '18'
 
-      # 3️⃣ Install dependencies
+      # 3️⃣ Install dependencies if any
       - name: Install dependencies
         run: npm install || echo "No dependencies to install"
 
@@ -41,19 +43,11 @@ jobs:
             "${{ github.event.inputs.last_name || github.event.client_payload.lastName }}" \
             "${{ github.event.inputs.job_title || github.event.client_payload.jobTitle }}"
 
-      # 5️⃣ Set Git remote using token (fix for 403 error)
-      - name: Configure Git remote
-        run: |
-          git remote remove origin || echo "No origin to remove"
-          git remote add origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/TEC-EA/tec-ea-signatures.git
-
-      # 6️⃣ Commit & push changes
+      # 5️⃣ Commit & push changes
       - name: Commit & push
         run: |
           git config user.name "TEC-EA"
-          git config user.email "tec.ea.hub@gmail.com"
+          git config user.email "Tec.ea.hub@gmail.com"
           git add .
           git commit -m "Add signature for ${{ github.event.inputs.first_name || github.event.client_payload.firstName }} ${{ github.event.inputs.last_name || github.event.client_payload.lastName }}" || echo "No changes to commit"
-          git push origin main
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          git push
