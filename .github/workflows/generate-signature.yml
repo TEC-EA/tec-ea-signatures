@@ -1,15 +1,15 @@
 name: Generate Employee Signature
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Manual trigger
     inputs:
-      firstName:
+      first_name:
         description: 'First Name'
         required: true
-      lastName:
+      last_name:
         description: 'Last Name'
         required: true
-      jobTitle:
+      job_title:
         description: 'Job Title'
         required: true
   repository_dispatch: # Optional: triggered via Make/Scenario One
@@ -23,27 +23,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Set up Node.js
+      # 2️⃣ Set up Node.js (required if your script uses Node)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3️⃣ Install dependencies (if needed)
+      # 3️⃣ Install dependencies (if any)
       - name: Install dependencies
         run: npm install || echo "No dependencies to install"
 
       # 4️⃣ Generate signature using your Node script
       - name: Generate signature
-        run: node generatesignature.js "${{ github.event.inputs.firstName }}" "${{ github.event.inputs.lastName }}" "${{ github.event.inputs.jobTitle }}"
+        run: node template/generate-signature.js "${{ github.event.inputs.first_name || github.event.client_payload.firstName }}" "${{ github.event.inputs.last_name || github.event.client_payload.lastName }}" "${{ github.event.inputs.job_title || github.event.client_payload.jobTitle }}"
 
-      # 5️⃣ Commit and push to GitHub
+      # 5️⃣ Commit & push changes
       - name: Commit & push
         run: |
           git config user.name "TEC-EA"
           git config user.email "Tec.ea.hub@gmail.com"
           git add .
-          git commit -m "Add signature for ${{ github.event.inputs.firstName }} ${{ github.event.inputs.lastName }}" || echo "No changes to commit"
+          git commit -m "Add signature for ${{ github.event.inputs.first_name || github.event.client_payload.firstName }} ${{ github.event.inputs.last_name || github.event.client_payload.lastName }}" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/TEC-EA/tec-ea-signatures.git main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
