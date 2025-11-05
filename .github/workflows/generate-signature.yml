@@ -1,51 +1,34 @@
 name: Generate Employee Signature
 
 on:
-  workflow_dispatch:
-    inputs:
-      first_name:
-        description: 'First Name'
-        required: true
-      last_name:
-        description: 'Last Name'
-        required: true
-      job_title:
-        description: 'Job Title'
-        required: true
+  workflow_dispatch: # Allows you to trigger it manually
+  repository_dispatch: # Optional: triggered via API from Make/Scenario One
 
 jobs:
-  generate_signature:
+  generate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set variables
-        run: |
-          FIRST_NAME="${{ github.event.inputs.first_name }}"
-          LAST_NAME="${{ github.event.inputs.last_name }}"
-          JOB_TITLE="${{ github.event.inputs.job_title }}"
-          FOLDER_NAME="${FIRST_NAME,,}-${LAST_NAME,,}"
-          echo "FIRST_NAME=$FIRST_NAME" >> $GITHUB_ENV
-          echo "LAST_NAME=$LAST_NAME" >> $GITHUB_ENV
-          echo "JOB_TITLE=$JOB_TITLE" >> $GITHUB_ENV
-          echo "FOLDER_NAME=$FOLDER_NAME" >> $GITHUB_ENV
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-      - name: Create employee folder
-        run: mkdir -p "employee/$FOLDER_NAME"
+      - name: Install dependencies
+        run: npm install # if you have any, else skip this step
 
-      - name: Generate signature HTML
-        run: |
-          TEMPLATE=$(cat template/signature-template.html)
-          SIGNATURE="${TEMPLATE//\{\{FULL_NAME\}\}/$FIRST_NAME $LAST_NAME}"
-          SIGNATURE="${SIGNATURE//\{\{JOB_TITLE\}\}/$JOB_TITLE}"
-          echo "$SIGNATURE" > "employee/$FOLDER_NAME/index.html"
+      - name: Generate signature
+        run: node generatesignature.js "${{ github.event.client_payload.firstName }}" "${{ github.event.client_payload.lastName }}" "${{ github.event.client_payload.jobTitle }}"
 
-      - name: Commit & push
+      - name: Commit and push
         run: |
           git config user.name "TEC-EA Bot"
-          git config user.email "it@tec-ea.com"
+          git config user.email "tec-ea-bot@tec-ea.com"
           git add .
-          git commit -m "Add signature for $FIRST_NAME $LAST_NAME"
-          git push
+          git commit -m "Add signature for ${{ github.event.client_payload.firstName }} ${{ github.event.client_payload.lastName }}"
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/TEC-EA/tec-ea-signatures.git main
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
