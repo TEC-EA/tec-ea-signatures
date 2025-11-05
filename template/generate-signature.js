@@ -1,7 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
-const [firstName, lastName, jobTitle] = process.argv.slice(2);
+const [firstNameRaw, lastNameRaw, jobTitle] = process.argv.slice(2);
+
+// Function to capitalize the first letter
+function capitalize(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+const firstName = capitalize(firstNameRaw);
+const lastName = capitalize(lastNameRaw);
+
 const folderName = `${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
 const outputDir = path.join('employee', folderName);
 
